@@ -1,0 +1,14 @@
+export const small_font_size = 12;
+export const regular_font_size = 16;
+export const header_font_size = 24;
+export const color_default_white = "#ffffff";
+export const color_primary = "#070F2B";
+export const color_secondary = "#1B1A55";
+export const color_tertiary = "#535C91";
+export const color_quaternary = "#9290C3";
+export const border_color = "lightgray";
+export const lightgray = "lightgray";
+export const highlight = "#007AFF";
+export const global_background = "#f6f8fa";
+export const tab_nav_icon_size = 18;
+export const expense_outgoing_color = "#fc5e53";
