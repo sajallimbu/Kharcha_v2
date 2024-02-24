@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { header_buttons } from "../variables/header_buttons";
 import { currencies } from "../variables/currencies";
 import { StyleSheet, View } from "react-native";
@@ -6,13 +6,16 @@ import Header from "./Header";
 import Expense from "./Expense";
 import { global_background } from "../variables/global_css";
 import History from "./History";
+import FloatingActionButton from "./FloationActionButton";
+import ExpenseModal from "./ExpenseModal";
+import { useSQLiteContext } from "expo-sqlite/next";
 
 export default function Home(params) {
   const [current_page, set_current_page] = useState(0);
   const [country, set_country] = useState("United States");
   const [expense, set_expense] = useState("73422");
   const [username, set_username] = useState("Sajal");
-  const [history, set_history] = useState(dummy_history);
+  const [history, set_history] = useState([]);
   const click_handler = (page) => {
     const current_target = page;
     const header_button_obj = header_buttons.find(
@@ -30,6 +33,26 @@ export default function Home(params) {
       : ""
     : "";
   const current_date = new Date().toDateString();
+  const on_fab_press = (event) => {
+    console.log("Pressed");
+    set_is_expense_modal_visible(true);
+  };
+  const [is_expense_modal_visible, set_is_expense_modal_visible] =
+    useState(false);
+
+  const _db = useSQLiteContext();
+
+  useEffect(() => {
+    _db.withTransactionAsync(async () => await getData());
+  }, [_db]);
+
+  async function getData() {
+    const result = await _db.getAllAsync(`
+      SELECT * FROM Expense
+    `);
+    console.log("Queried data:", result);
+    set_history(result);
+  }
   return (
     <View style={home_style.container}>
       <Header
@@ -43,6 +66,16 @@ export default function Home(params) {
         history={history}
         currency_symbol={currency_symbol}
       ></History>
+      <FloatingActionButton onPress={on_fab_press}></FloatingActionButton>
+      <ExpenseModal
+        is_modal_visible={is_expense_modal_visible}
+        on_request_close={() => set_is_expense_modal_visible(fase)}
+        on_button_press={(value) => {
+          console.log("Save pressed: " + value);
+          set_is_expense_modal_visible(false);
+        }}
+        currency_symbol={currency_symbol}
+      ></ExpenseModal>
     </View>
   );
 }

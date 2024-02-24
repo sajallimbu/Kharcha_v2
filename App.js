@@ -1,4 +1,12 @@
-import { SafeAreaView, StyleSheet, View } from "react-native";
+import {
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  View,
+  StatusBar,
+  ActivityIndicator,
+  Text,
+} from "react-native";
 import {
   color_primary,
   global_background,
@@ -15,13 +23,33 @@ import Home from "./components/Home";
 import Insights from "./components/Insights";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { initialize_db } from "./services/Database";
+import { useEffect, useState } from "react";
+import { loadDatabase } from "./database/Database";
+import { SQLiteProvider } from "expo-sqlite/next";
 
 const Tab = createBottomTabNavigator();
 
 export default function App() {
+  const [db_loaded, set_db_loaded] = useState(false);
+
+  useEffect(() => {
+    loadDatabase()
+      .then(() => set_db_loaded(true))
+      .catch((error) => console.error(error));
+  });
+
+  if (!db_loaded) {
+    return (
+      <View style={{ flex: 1 }}>
+        <ActivityIndicator size={"large"} />
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
   return (
     <SafeAreaView style={app_style.safe_container}>
-      <NavigationContainer>
+      <SQLiteProvider databaseName="expense.db">
+        {/* <NavigationContainer>
         <Tab.Navigator
           screenOptions={{
             tabBarActiveTintColor: color_primary,
@@ -63,7 +91,9 @@ export default function App() {
             }}
           />
         </Tab.Navigator>
-      </NavigationContainer>
+      </NavigationContainer> */}
+        <Home></Home>
+      </SQLiteProvider>
     </SafeAreaView>
   );
 }
@@ -72,5 +102,6 @@ const app_style = StyleSheet.create({
   safe_container: {
     flex: 1,
     backgroundColor: global_background,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
 });
