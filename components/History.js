@@ -22,7 +22,7 @@ export default function History({ history_title, history, currency_symbol }) {
         renderItem={({ item }) => {
           return (
             <View style={history_styles.history_item}>
-              <View
+              {/* <View
                 style={{
                   paddingRight: 8,
                 }}
@@ -34,19 +34,19 @@ export default function History({ history_title, history, currency_symbol }) {
                     height: 42,
                   }}
                 />
-              </View>
+              </View> */}
               <View style={history_styles.history_item_and_date}>
                 <Text style={history_styles.history_item_text}>
-                  {item["title"]}
+                  {item["Description"]}
                 </Text>
                 <Text style={history_styles.history_item_date}>
-                  {item["date_created"]}
+                  {item["DateCreated"]}
                 </Text>
               </View>
               <View style={{ justifyContent: "center" }}>
                 <Text style={history_styles.history_item_amount}>
                   {currency_symbol}
-                  {item["amount"]}
+                  {item["Amount"]}
                 </Text>
               </View>
             </View>

@@ -23,14 +23,37 @@ import Home from "./components/Home";
 import Insights from "./components/Insights";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { initialize_db } from "./services/Database";
-import { useEffect, useState } from "react";
-import { loadDatabase } from "./database/Database";
+import { Suspense, useEffect, useState } from "react";
 import { SQLiteProvider } from "expo-sqlite/next";
+import { Asset } from "expo-asset";
+import * as FileSystem from "expo-file-system";
 
 const Tab = createBottomTabNavigator();
+const loadDatabase = async () => {
+  const dbName = "expense.db";
+  const dbAsset = require("./assets/expense.db");
+  const dbUri = Asset.fromModule(dbAsset).uri;
+  const dbFilePath = `${FileSystem.documentDirectory}SQLite/${dbName}`;
+
+  console.log("dbName: " + dbName);
+  console.log("dbAsset: " + dbAsset);
+  console.log("dbUri:" + dbUri);
+  console.log("dbFilePath: " + dbFilePath);
+
+  const fileInfo = await FileSystem.getInfoAsync(dbFilePath);
+  console.log("fileInfo: " + JSON.stringify(fileInfo));
+  if (!fileInfo.exists) {
+    console.log("expense.db does not exist");
+    await FileSystem.makeDirectoryAsync(
+      `${FileSystem.documentDirectory}SQLite`,
+      { intermediates: true }
+    );
+    await FileSystem.downloadAsync(dbUri, dbFilePath);
+  }
+};
 
 export default function App() {
-  const [db_loaded, set_db_loaded] = useState(false);
+  const [db_loaded, set_db_loaded] = useState(true);
 
   useEffect(() => {
     loadDatabase()
@@ -48,7 +71,8 @@ export default function App() {
   }
   return (
     <SafeAreaView style={app_style.safe_container}>
-      <SQLiteProvider databaseName="expense.db">
+      {/* <Suspense> */}
+      <SQLiteProvider databaseName="expense.db" useSuspense>
         {/* <NavigationContainer>
         <Tab.Navigator
           screenOptions={{
@@ -94,6 +118,7 @@ export default function App() {
       </NavigationContainer> */}
         <Home></Home>
       </SQLiteProvider>
+      {/* </Suspense> */}
     </SafeAreaView>
   );
 }

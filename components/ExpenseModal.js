@@ -32,6 +32,7 @@ export default function ExpenseModal({
   on_button_press,
 }) {
   const [amount, set_amount] = useState(0);
+  const [description, set_description] = useState("");
   return (
     <Modal
       visible={is_modal_visible}
@@ -77,6 +78,16 @@ export default function ExpenseModal({
               </Pressable>
             </View>
             <View style={{ flexDirection: "column", gap: 2 }}>
+              <Text style={expense_modal_style.expense_label}>Description</Text>
+              <TextInput
+                placeholder="Enter a description"
+                style={expense_modal_style.expense_input}
+                onChangeText={(description_value) =>
+                  set_description(description_value)
+                }
+              />
+            </View>
+            <View style={{ flexDirection: "column", gap: 2 }}>
               <Text style={expense_modal_style.expense_label}>
                 Enter Amount
               </Text>
@@ -88,13 +99,6 @@ export default function ExpenseModal({
               />
             </View>
             {/* {Add a drop down for category select} */}
-            {/* <View style={{ flexDirection: "column", gap: 2 }}>
-              <Text style={expense_modal_style.expense_label}>Description</Text>
-              <TextInput
-                placeholder="Enter a description"
-                style={expense_modal_style.expense_input}
-              />
-            </View> */}
             <View
               style={{
                 alignItems: "center",
@@ -106,7 +110,7 @@ export default function ExpenseModal({
               }}
             >
               <Pressable
-                onPress={() => on_button_press(amount)}
+                onPress={() => on_button_press({ amount, description })}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",

@@ -9,11 +9,12 @@ import History from "./History";
 import FloatingActionButton from "./FloationActionButton";
 import ExpenseModal from "./ExpenseModal";
 import { useSQLiteContext } from "expo-sqlite/next";
+import * as SQLite from "expo-sqlite";
 
 export default function Home(params) {
   const [current_page, set_current_page] = useState(0);
-  const [country, set_country] = useState("United States");
-  const [expense, set_expense] = useState("73422");
+  const [country, set_country] = useState("Nepal");
+  const [expense, set_expense] = useState("0");
   const [username, set_username] = useState("Sajal");
   const [history, set_history] = useState([]);
   const click_handler = (page) => {
@@ -40,19 +41,48 @@ export default function Home(params) {
   const [is_expense_modal_visible, set_is_expense_modal_visible] =
     useState(false);
 
-  const _db = useSQLiteContext();
+  // sqlite implementation
+  const db = useSQLiteContext();
+  console.log("db_context: " + JSON.stringify(db));
 
   useEffect(() => {
-    _db.withTransactionAsync(async () => await getData());
-  }, [_db]);
+    db.withTransactionAsync(async () => {
+      await db.runAsync(`CREATE TABLE IF NOT EXISTS Expense (
+          Id INTEGER PRIMARY KEY AUTOINCREMENT,
+          Category TEXT,
+          Description TEXT,
+          Amount INTEGER,
+          DateCreated TEXT
+      );`);
+      await getData();
+    }).catch((error) => console.error(error));
+  }, [db]);
 
   async function getData() {
-    const result = await _db.getAllAsync(`
-      SELECT * FROM Expense
-    `);
-    console.log("Queried data:", result);
+    console.log("Hello");
+    const result = await db.getAllAsync(`SELECT * FROM Expense;`);
+    console.table("db_result: " + result);
     set_history(result);
+    const total_expense_till_now = await db.getAllAsync(
+      "SELECT Amount FROM Expense;"
+    );
+    console.log("toto expense: " + total_expense_till_now);
+    let total_expense = 0;
+    total_expense_till_now.map((obj) => {
+      total_expense += obj["Amount"] || 0;
+    });
+    set_expense(total_expense);
   }
+  //
+
+  async function reset_data() {
+    console.log("Resetting data");
+    db.withTransactionAsync(async () => {
+      await db.runAsync(`DELETE FROM Expense`);
+      await getData();
+    });
+  }
+
   return (
     <View style={home_style.container}>
       <Header
@@ -60,7 +90,11 @@ export default function Home(params) {
         on_button_click={click_handler}
         current_page={current_page}
       ></Header>
-      <Expense currency_symbol={currency_symbol} expense={expense}></Expense>
+      <Expense
+        currency_symbol={currency_symbol}
+        expense={expense}
+        on_reset_press={reset_data}
+      ></Expense>
       <History
         history_title={current_date}
         history={history}
@@ -70,9 +104,24 @@ export default function Home(params) {
       <ExpenseModal
         is_modal_visible={is_expense_modal_visible}
         on_request_close={() => set_is_expense_modal_visible(fase)}
-        on_button_press={(value) => {
-          console.log("Save pressed: " + value);
+        on_button_press={({ description, amount }) => {
           set_is_expense_modal_visible(false);
+          if (!description || !amount) {
+            console.log("Triggered on close");
+            return;
+          }
+          db.runAsync(
+            `
+              INSERT INTO Expense (Category, Description, Amount, DateCreated)
+              VALUES (?,?,?,?);
+            `,
+            ["", description, amount, current_date]
+          ).catch((error) => console.error("Insert error: " + error));
+
+          console.log("Save pressed: " + amount);
+          if (amount !== "") {
+            getData();
+          }
         }}
         currency_symbol={currency_symbol}
       ></ExpenseModal>
